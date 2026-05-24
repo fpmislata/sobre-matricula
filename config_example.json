@@ -20,7 +20,7 @@
   "max_pages_to_analyze": 6,
   "pasar_a_grises": true,
   "document_name_suffix": "_M",
-  "processed_prefix": "_!_",
+  "processed_prefix": "#",
   "processed_prefix_history": [],
   "config_password_hash": "",
   "asistencia_code": {
