@@ -1,0 +1,103 @@
+{
+  "theme": "dark",
+  "input_dir": "",
+  "output_dir": "",
+  "modo_desarrollo_prod": false,
+  "debug_reprocess": true,
+  "pdf_limit": null,
+  "modo_log_fichero": "nuevo",
+  "ollama_url": "http://ollama.com:80/api/generate",
+  "ollama_model": "qwen/qwen3-vl-8b-instruct",
+  "ollama_timeout": 120,
+  "ollama_max_retries": 3,
+  "openrouter_url": "https://openrouter.ai/api/v1/chat/completions",
+  "openrouter_model": "qwen/qwen3-vl-8b-instruct",
+  "openrouter_api_key": "",
+  "pdf_dpi": 200,
+  "yolo_confidence": 0.35,
+  "face_padding_ratio": 0.35,
+  "overwrite_existing": true,
+  "max_pages_to_analyze": 6,
+  "pasar_a_grises": true,
+  "document_name_suffix": "_M",
+  "processed_prefix": "_!_",
+  "processed_prefix_history": [],
+  "config_password_hash": "",
+  "asistencia_code": {
+    "presencial": "P",
+    "semipresencial": "S",
+    "libre": "L",
+    "parcial": "PA"
+  },
+  "ciclos": {
+    "ASIR": {
+      "nombre": "Administración de Sistemas Informáticos en Red",
+      "grado": "superior"
+    },
+    "DAM": {
+      "nombre": "Desarrollo de Aplicaciones Multiplataforma",
+      "grado": "superior"
+    },
+    "DAW": {
+      "nombre": "Desarrollo de Aplicaciones Web",
+      "grado": "superior"
+    },
+    "AVGE": {
+      "nombre": "Agencias de Viajes y Gestión de Eventos",
+      "grado": "superior"
+    },
+    "GAT": {
+      "nombre": "Gestión de Alojamientos Turísticos",
+      "grado": "superior"
+    },
+    "GIAT": {
+      "nombre": "Guía, Información y Asistencia Turística",
+      "grado": "superior"
+    },
+    "CI": {
+      "nombre": "Comercio Internacional",
+      "grado": "superior"
+    },
+    "MP": {
+      "nombre": "Marketing y Publicidad",
+      "grado": "superior"
+    },
+    "AF": {
+      "nombre": "Administración y Finanzas",
+      "grado": "superior"
+    },
+    "OPT": {
+      "nombre": "Óptica de Anteojería",
+      "grado": "superior"
+    },
+    "LCB": {
+      "nombre": "Laboratorio Clínico y Biomédico",
+      "grado": "superior"
+    },
+    "AC": {
+      "nombre": "Actividades Comerciales",
+      "grado": "medio"
+    },
+    "GA": {
+      "nombre": "Gestión Administrativa",
+      "grado": "medio"
+    },
+    "CAE": {
+      "nombre": "Cuidados Auxiliares de Enfermería",
+      "grado": "medio"
+    },
+    "SMR": {
+      "nombre": "Sistemas Microinformáticos y Redes",
+      "grado": "medio"
+    }
+  },
+  "document_name_format": "{nombre}_{apellido1}_{apellido2},{nombre}_E{expediente}_{asistencia}{año_ini}{año_fin}_M",
+  "output_folder_structure": "{ciclo_codigo}",
+  "pending_reorganization": false,
+  "skip_pending_reorganization": false,
+  "prompt_form": "ATENCIÓN: Analiza EXCLUSIVAMENTE la imagen que se adjunta en este mensaje.\nNo uses ningún dato de imágenes anteriores ni de otras llamadas.\nNo inventes ni rellenes campos con datos que no veas claramente en ESTA imagen.\nCada campo que no puedas leer con certeza debe ser null.\n\nEres un sistema OCR especializado en formularios de matrícula de centros de formación profesional españoles.\nEl formulario está escaneado, puede estar torcido, con ruido o escrito a mano en bolígrafo.\n\nNÚMERO DE EXPEDIENTE — prioridad máxima:\n- Está escrito A MANO en la esquina SUPERIOR DERECHA del formulario.\n- Es un número de 5 cifras, SIEMPRE mayor de 15000 (ejemplos: 15402, 16237, 17089).\n- Puede aparecer junto a la palabra \"Expediente\", \"Exp.\", \"Nº\" o solo el número.\n- Busca con atención en la zona superior derecha antes de declararlo null.\n- Si ves dígitos manuscritos en esa zona aunque estén torcidos o con mala tinta, es el expediente.\n\nExtrae los datos del formulario y devuelve ÚNICAMENTE un objeto JSON válido con EXACTAMENTE este esquema:\n\n{\n  \"expediente\": \"número de 5 cifras escrito a mano en la esquina superior derecha (mayor de 15000) o null\",\n  \"tipo_documento\": \"DNI o NIE o PASAPORTE o null\",\n  \"numero_documento\": \"string exacto sin espacios en mayúsculas o null\",\n  \"nombre\": \"string o null\",\n  \"apellido1\": \"string o null\",\n  \"apellido2\": \"string o null\",\n  \"ciclo_detectado\": \"texto exacto del formulario tal como aparece escrito o null\",\n  \"ciclo_codigo\": \"código exacto del catálogo (DAW, SMR, GIAT, etc.) que mejor corresponde al ciclo escrito, o null si no puedes determinarlo con seguridad\",\n  \"grado\": \"medio o superior o null\",\n  \"tipo_asistencia\": \"presencial o semipresencial o libre o parcial o null\",\n  \"curso_inicio\": \"año como string, ej: 2024, o null\",\n  \"curso_fin\": \"año como string, ej: 2025, o null\"\n}\n\nIMPORTANTE — tipo de documento:\n- Si el número empieza por X, Y o Z → es SIEMPRE un NIE, nunca un pasaporte.\n- Si el número son 8 dígitos seguidos de una letra → es DNI.\n- PASAPORTE solo si el formato no encaja con DNI ni NIE (alfanumérico libre sin esa estructura).\n\nIMPORTANTE para DNI/NIE/Pasaporte — estructura posicional:\n\nDNI (9 caracteres: 8 dígitos + 1 letra):\n- Posiciones 1-8: SIEMPRE dígitos. Si dudas entre dígito y letra similar, elige el dígito: O→0, I/L→1, B→8, S→5, G→6, Z→2, Q→0\n- Posición 9: SIEMPRE una letra de control. Si dudas entre letra y dígito similar, elige la letra: 0→O, 1→I, 8→B, 5→S, 6→G\n- Ejemplo: 12345678A\n\nNIE (9 caracteres: 1 letra + 7 dígitos + 1 letra):\n- Posición 1: SIEMPRE X, Y o Z. Si ves algo parecido a X, Y o Z, interpreta como la letra correspondiente.\n- Posiciones 2-8: SIEMPRE dígitos. Aplica las mismas sustituciones que en el DNI: O→0, I/L→1, B→8, S→5, G→6\n- Posición 9: SIEMPRE una letra de control. Si dudas, elige la letra: 0→O, 1→I, 8→B, 5→S, 6→G\n- Ejemplo: X1234567A\n\nPasaporte español (formato variable, alfanumérico):\n- No tiene una estructura posicional fija de dígitos y letras. Transcribe exactamente lo que ves sin aplicar sustituciones.\n\nPara los tres tipos: transcribe lo que ves con estas reglas. No calcules ni verifiques la letra de control.\nSi el campo tiene letras tanto al inicio como al final (formato incorrecto), transcríbelo tal cual sin intentar corregirlo.\n\n{{ciclos}}\n\nEl campo \"grado\" se deduce del ciclo detectado. Si el formulario también tiene una casilla o texto indicando \"Grado Superior\" o \"Grado Medio\", úsalo para confirmar.\ntipo_asistencia: el formulario tiene checkboxes para presencial, semipresencial, libre y parcial.\nSi un campo no es legible usa null. No inventes datos.\n\nRECUERDA: Solo puedes devolver datos que veas claramente en la imagen adjunta. No uses datos de otras imágenes.\n\nPALABRAS TACHADAS: si una palabra en cualquier campo está tachada (barrada con línea o garabato encima), ignórala completamente.\nUsa solo el texto NO tachado que esté escrito junto a ella (el estudiante escribe el valor correcto al lado del tachado).\n",
+  "prompt_retry_expediente": "ATENCIÓN: Analiza SOLO la imagen adjunta en este mensaje. No uses datos de imágenes anteriores.\n\nMira SOLO la esquina SUPERIOR DERECHA de esta imagen.\nHay un número escrito A MANO de 5 cifras (mayor de 15000). Es el número de expediente.\nDevuelve ÚNICAMENTE un JSON con este esquema:\n{\"expediente\": \"número de 5 cifras o null\"}\nNo añadas ningún otro campo. No inventes datos.",
+  "prompt_retry_nombres": "ATENCIÓN: Analiza SOLO la imagen adjunta en este mensaje. No uses datos de imágenes anteriores.\n\nEsta imagen es un formulario de matrícula manuscrito.\nLocaliza los tres campos de nombre y transcribe exactamente lo que está escrito a mano en cada línea.\n\n- \"NOMBRE:\" → nombre de pila → campo \"nombre\"\n- \"APELLIDO 1:\" o \"PRIMER APELLIDO:\" → primer apellido → campo \"apellido1\"\n- \"APELLIDO 2:\" o \"SEGUNDO APELLIDO:\" → segundo apellido → campo \"apellido2\"\n\nSon tres campos COMPLETAMENTE SEPARADOS. Aunque el estudiante haya escrito dos palabras\nen la misma línea, identifica a qué campo pertenece cada zona del formulario.\nTranscribe cualquier nombre: japonés, árabe, chino, europeo… letra por letra como aparece.\nSi un campo está en blanco usa null.\n\nPALABRAS TACHADAS: si una palabra está tachada (barrada con línea o garabato encima), ignórala completamente.\nUsa solo el texto NO tachado que esté escrito junto a ella (el texto correcto se escribe al lado del tachado).\n\nDevuelve ÚNICAMENTE un JSON:\n{\"nombre\": \"string o null\", \"apellido1\": \"string o null\", \"apellido2\": \"string o null\"}",
+  "prompt_retry_apellido2": "ATENCIÓN: Analiza SOLO la imagen adjunta en este mensaje. No uses datos de imágenes anteriores.\n\nEsta imagen es un formulario de matrícula manuscrito.\nBusca ÚNICAMENTE el campo \"APELLIDO 2\" o \"SEGUNDO APELLIDO\" del formulario.\nEs el tercer campo de nombre, debajo de \"APELLIDO 1\" y de \"NOMBRE\".\nEl campo puede contener un apellido de cualquier origen (japonés, árabe, chino, europeo, etc.).\nTranscribe exactamente lo que ves escrito a mano en ese campo, letra por letra.\nSi el campo está en blanco o no ves nada escrito, usa null.\n\nPALABRAS TACHADAS: si una palabra está tachada (barrada con línea o garabato encima), ignórala completamente.\nUsa solo el texto NO tachado que esté escrito junto a ella (el texto correcto se escribe al lado del tachado).\n\nDevuelve ÚNICAMENTE un JSON con un solo campo:\n{\"apellido2\": \"string o null\"}",
+  "prompt_page": "ATENCIÓN: Analiza EXCLUSIVAMENTE la imagen adjunta en este mensaje.\nNo uses ningún dato, nombre, número ni información de imágenes o llamadas anteriores.\nCada llamada es completamente independiente. No recuerdes nada de imágenes previas.\nSi no ves algo con claridad en ESTA imagen, devuelve null — nunca inventes ni reutilices datos.\n\nAnaliza esta imagen escaneada de un expediente académico.\nDetermina qué tipo de contenido contiene y extrae datos si es un documento de identidad.\nDevuelve ÚNICAMENTE un objeto JSON válido con EXACTAMENTE este esquema:\n\n{\n  \"tipo_pagina\": \"foto_carnet o documento_identidad o otro\",\n  \"subtipo_documento\": \"DNI o NIE o PASAPORTE o null\",\n  \"datos_documento\": {\n    \"nombre\": \"string o null\",\n    \"apellido1\": \"string o null\",\n    \"apellido2\": \"string o null\",\n    \"numero_documento\": \"string en mayúsculas sin espacios o null\"\n  }\n}\n\nREGLA CRÍTICA para clasificar el tipo de página:\n\n\"documento_identidad\": la imagen muestra un DNI, NIE o pasaporte español (cara delantera, dorso, o ambas).\n  - CARA DELANTERA: foto de la persona, nombre, apellidos, número de documento, fecha nacimiento/caducidad, chip dorado (DNI).\n  - DORSO: código MRZ (dos líneas de caracteres alfanuméricos con <<), número de soporte, domicilio, firma, o código de barras.\n  - Tanto la cara delantera como el dorso son \"documento_identidad\".\n  - El documento puede tener una foto de cara dentro — eso NO lo convierte en foto_carnet.\n  - Si ves texto de documento, MRZ, número de DNI/NIE o cualquier campo oficial → \"documento_identidad\".\n  - Aunque la imagen esté girada, sea una fotocopia o esté recortada → \"documento_identidad\".\n\n\"foto_carnet\": la imagen muestra SOLO una fotografía de una persona, sin ningún texto de documento alrededor.\n  - Fondo liso o neutro, cara centrada, sin número de DNI/NIE ni campos de texto visibles.\n  - Si hay CUALQUIER texto de documento visible → NO es foto_carnet, es documento_identidad.\n\n\"otro\": formularios adicionales, hojas en blanco, texto sin cara ni documento de identidad.\n\nPara \"documento_identidad\" extrae en datos_documento ÚNICAMENTE el texto que sea DIRECTAMENTE VISIBLE en esta imagen:\n- nombre: solo el nombre de pila que aparezca impreso en el documento (ej: \"KENJI\"). Si no ves un nombre claramente, escribe null.\n- apellido1: primer apellido impreso en el documento. Si no lo ves claramente, escribe null.\n- apellido2: segundo apellido si aparece impreso, o null.\n- numero_documento: número completo en mayúsculas sin espacios ni guiones tal como aparece en el documento.\n\nORDEN DE APELLIDOS en DNI/NIE español — regla crítica:\n- Si ves etiquetas explícitas \"PRIMER APELLIDO\" / \"SEGUNDO APELLIDO\": úsalas directamente como apellido1 y apellido2.\n- Si ves un campo unificado \"APELLIDOS\" con ambos apellidos: el primero (izquierda/arriba) es apellido1, el segundo es apellido2.\n- Si ves la zona MRZ al pie del documento (líneas con <<): el formato es APELLIDO1<<APELLIDO2<<NOMBRE<... — úsalo como referencia de orden si es legible.\n- NUNCA inviertas el orden de los apellidos respecto a cómo aparecen en el documento.\n\nREGLAS ABSOLUTAS para datos_documento:\n- Devuelve ÚNICAMENTE el texto visible en la imagen. No infieras, no completes, no inventes.\n- Si un campo no es legible con certeza, escribe null. Es preferible null a un dato incorrecto.\n- NO copies datos de imágenes anteriores ni de ninguna otra fuente.\n- NO rellenes campos basándote en lo que \"debería\" aparecer — solo lo que ves.\n\nSi el documento es un DNI/NIE aplica las mismas reglas posicionales que para el formulario:\n- DNI posiciones 1-8 dígitos (O→0, I/L→1, B→8, S→5, G→6), posición 9 letra de control\n- NIE: posición 1 X/Y/Z, posiciones 2-8 dígitos, posición 9 letra de control\n\nSi la imagen está girada o inclinada analiza igualmente el contenido.\ndatos_documento solo se rellena si tipo_pagina == \"documento_identidad\", en otro caso null en todos los subcampos.\n\nRECUERDA FINAL: Solo puedes devolver datos que veas físicamente en la imagen adjunta. Cualquier dato que no aparezca en esta imagen debe ser null.\n"
+}
