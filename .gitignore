@@ -16,3 +16,4 @@ pdf/
 /.claude/
 /build/_pyinstaller/
 /dist/ExpedienteExtractor/_internal/
+/dist/
