@@ -10,6 +10,7 @@ if "%1"=="integration" goto :integration
 if "%1"=="fast" goto :fast
 if "%1"=="cov" goto :cov
 if "%1"=="clean" goto :clean
+if "%1"=="installer" goto :installer
 echo Target '%1' desconocido.
 goto :help
 
@@ -40,6 +41,10 @@ goto :help
     for /d /r . %%d in (__pycache__) do @if exist "%%d" rd /s /q "%%d"
     goto :eof
 
+:installer
+    powershell -NoProfile -ExecutionPolicy Bypass -File build\bump_installer.ps1
+    goto :eof
+
 :help
     echo.
     echo   make [target]
@@ -50,5 +55,6 @@ goto :help
     echo   fast          Todo excepto @slow
     echo   cov           Suite completa + reporte de cobertura HTML
     echo   clean         Limpia .coverage, htmlcov, __pycache__
+    echo   installer     Incrementa version e instala con Inno Setup (Windows)
     echo   help          Muestra esta ayuda
     echo.

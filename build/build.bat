@@ -89,7 +89,7 @@ if exist "%ICON%" set ICON_FLAG=--icon "%ICON%"
 if errorlevel 1 (
     echo.
     echo [ERROR] PyInstaller fallo. Revisa los mensajes anteriores.
-    pause
+    if not defined NOPAUSE pause
     exit /b 1
 )
 
@@ -125,7 +125,7 @@ if "%ISCC%"=="" (
 ) else (
     "%ISCC%" build\installer.iss
     if not errorlevel 1 (
-        echo Instalador generado: %DIST_DIR%\ExpedienteExtractorSetup.exe
+        echo Instalador generado en: %DIST_DIR%\
     ) else (
         echo [ERROR] Inno Setup fallo. Revisa los mensajes anteriores.
     )
@@ -133,4 +133,4 @@ if "%ISCC%"=="" (
 
 echo.
 echo BUILD COMPLETADO.
-pause
+if not defined NOPAUSE pause

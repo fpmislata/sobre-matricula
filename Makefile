@@ -15,7 +15,7 @@ endif
 PYTEST := $(PYTHON) -m pytest
 
 # ── Targets ───────────────────────────────────────────────────────────────────
-.PHONY: test unit integration fast cov clean help
+.PHONY: test unit integration fast cov clean installer help
 
 .DEFAULT_GOAL := help
 
@@ -42,6 +42,14 @@ cov:
 ## clean      Remove coverage, cache, and __pycache__
 clean:
 	$(RMRF)
+
+## installer  Bump build version and recompile Inno Setup installer (Windows only)
+installer:
+ifeq ($(OS),Windows_NT)
+	powershell -NoProfile -ExecutionPolicy Bypass -File build\bump_installer.ps1
+else
+	@echo "installer: target Windows-only (requires Inno Setup / iscc.exe)" && exit 1
+endif
 
 ## help       Show this help
 help:

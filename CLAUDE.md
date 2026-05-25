@@ -548,7 +548,7 @@ Los ciclos se almacenan como `{"CODIGO": {"nombre": "...", "grado": "superior|me
 - Botón **"Procesar PDFs (N)"** activo solo si: carpeta entrada configurada ∧ carpeta salida configurada ∧ hay PDFs pendientes ∧ no hay proceso en curso. Procesa automáticamente todos los PDFs pendientes (sin selección manual).
 - Sección de progreso (visible durante el proceso): barra de progreso, contador "X / N procesados", tiempo transcurrido, ETA.
 - La vista escanea independientemente su propia `_output_index` para calcular las stats.
-- Diálogos de startup si las carpetas no están configuradas o no existen (`check_folders_on_startup()`).
+- **Diálogos de startup obligatorios** (`check_folders_on_startup()`): si la carpeta de PDFs o la de salida no están configuradas o no existen, aparece un diálogo modal sin botón Cancelar. Si el usuario cierra el FilePicker sin elegir nada, el mismo diálogo vuelve a aparecer. No se puede usar la app sin ambas rutas válidas. El check se lanza con 300 ms de delay (`page.run_task`) para garantizar que la ventana esté visible antes del primer diálogo. Los métodos usados en startup son `_show_input_folder_dialog_mandatory()` y `_show_output_folder_dialog_mandatory()`; los métodos con Cancelar (`_show_input_folder_dialog`, `_show_output_folder_dialog_if_needed`) se conservan para los botones manuales de la UI.
 - Se registra como observer del `ProcessingManager`: recibe actualizaciones en tiempo real vía `on_timer_tick`.
 - Al navegar de vuelta a esta vista (no primera vez), llama a `refresh()` para sincronizar las carpetas desde `app.cfg` y rescanear.
 
@@ -654,6 +654,35 @@ Los ciclos se almacenan como `{"CODIGO": {"nombre": "...", "grado": "superior|me
 - La carpeta `_borrados/` es ignorada por `_load_expedientes` y por `_build_output_index`.
 - `_rebuild_table()` llama a `self._table_container.update()` al final para forzar el re-render en Flet 0.85 independientemente del ciclo de actualización del diálogo.
 - Al aprobar un expediente de revisión (`ReviewDialog → Guardar`), la carpeta de destino se calcula con `resolve_hierarchy_path(output_folder_structure, datos)` — el expediente aprobado va directamente a la jerarquía configurada.
+
+## Build e Instalador
+
+### Compilar la aplicación (PyInstaller)
+
+```bat
+build\build.bat
+```
+
+Genera `dist\ExpedienteExtractor\ExpedienteExtractor.exe` y luego llama a Inno Setup si está disponible.
+
+### Compilar solo el instalador (Inno Setup) con versión incremental
+
+```bat
+make installer          :: desde make.bat (Windows)
+make installer          # desde Makefile (Windows con GNU Make)
+```
+
+Ambos invocan `build\bump_installer.ps1`, que ejecuta el build completo:
+
+1. **Localiza `iscc.exe`** (PATH, `%ProgramFiles(x86)%`, `%ProgramFiles%`, `%LOCALAPPDATA%`). Si no está instalado, **descarga e instala Inno Setup 6 automáticamente** (silent install).
+2. **Incrementa la versión** en `build/installer.iss`: tercer segmento de build (`"1.0"` → `"1.0.1"` → `"1.0.2"` …).
+3. **Llama a `build\build.bat`** con la variable `NOPAUSE=1` (suprime los `pause` interactivos), que hace:
+   - Compila la app con **PyInstaller** (`dist\ExpedienteExtractor\`)
+   - Ejecuta **iscc** y genera `dist\ExpedienteExtractorSetup.exe`
+
+Para cambiar la versión base (`1.0`) hay que editarla manualmente en `installer.iss`; el script solo toca el tercer segmento.
+
+`build\build.bat` ejecutado manualmente sigue haciendo `pause` al final (comportamiento no cambia).
 
 ## Testing
 

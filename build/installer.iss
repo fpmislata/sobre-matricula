@@ -5,7 +5,8 @@
 ; ============================================================
 
 #define AppName      "Expediente Extractor"
-#define AppVersion   "1.0"
+#define AppVersion   "1.0.3"
+#define SafeVersion  StringChange(AppVersion, ".", "_")
 #define AppPublisher "IABD - FP Mislata"
 #define AppURL       "https://iabd.cip.fpmislata.com"
 #define AppExeName   "ExpedienteExtractor.exe"
@@ -23,7 +24,7 @@ AppUpdatesURL={#AppURL}
 DefaultDirName={autopf}\{#AppName}
 DefaultGroupName={#AppName}
 OutputDir={#OutputDir}
-OutputBaseFilename=ExpedienteExtractorSetup
+OutputBaseFilename=ExpedienteExtractor_{#SafeVersion}
 Compression=lzma2/ultra64
 SolidCompression=yes
 WizardStyle=modern

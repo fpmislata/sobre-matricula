@@ -14,3 +14,4 @@ pdf/
 /pdf_original/
 /config.json
 /.claude/
+/build/_pyinstaller/
