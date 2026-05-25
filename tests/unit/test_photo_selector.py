@@ -2,8 +2,10 @@
 Unit tests para modules/photo_selector.select_best_photo().
 
 Criterio de selección:
-  1. Color gana sobre grises (bonus 10_000_000)
-  2. Entre iguales: mayor nitidez (Laplacian variance)
+  1. Fotos de carnet siempre ganan sobre fotos de DNI (si hay alguna de carnet).
+  2. Si no hay carnet, se usa la mejor foto de DNI.
+  3. Dentro del mismo tipo: color gana sobre gris (bonus 10_000_000).
+  4. Entre iguales: mayor nitidez (Laplacian variance).
 
 Imágenes sintéticas:
   make_color_image()  → is_color_image=True, nitidez moderada
@@ -42,25 +44,72 @@ def test_un_elemento_retorna_ese_elemento():
     assert result["tipo"] == "carnet"
 
 
-# ── Color gana sobre gris ─────────────────────────────────────────────────────
+# ── Preferencia de tipo: carnet siempre sobre DNI ────────────────────────────
 
 @pytest.mark.unit
-def test_color_beats_gray():
+def test_carnet_beats_dni_gray_vs_gray():
+    """carnet en gris gana sobre DNI en gris."""
+    fotos = [
+        _photo(make_gray_image(), tipo="carnet"),
+        _photo(make_gray_image(), tipo="dni"),
+    ]
+    result = select_best_photo(fotos)
+    assert result["tipo"] == "carnet"
+
+
+@pytest.mark.unit
+def test_carnet_gray_beats_dni_color():
+    """carnet en gris gana sobre DNI en color."""
     fotos = [
         _photo(make_gray_image(),  tipo="carnet"),
-        _photo(make_color_image(), tipo="documento"),
+        _photo(make_color_image(), tipo="dni"),
+    ]
+    result = select_best_photo(fotos)
+    assert result["tipo"] == "carnet"
+    assert result["es_color"] is False
+
+
+@pytest.mark.unit
+def test_carnet_sharp_gray_beats_dni_blurry_color():
+    """carnet nítida en gris gana sobre DNI borrosa en color."""
+    fotos = [
+        _photo(make_sharp_image(),                    tipo="carnet"),
+        _photo(make_blurry_image(make_color_image()), tipo="dni"),
+    ]
+    result = select_best_photo(fotos)
+    assert result["tipo"] == "carnet"
+
+
+# ── Color gana dentro del mismo tipo ─────────────────────────────────────────
+
+@pytest.mark.unit
+def test_color_beats_gray_entre_carnets():
+    """Entre carnets, color gana sobre gris."""
+    fotos = [
+        _photo(make_gray_image(),  tipo="carnet"),
+        _photo(make_color_image(), tipo="carnet"),
     ]
     result = select_best_photo(fotos)
     assert result["es_color"] is True
-    assert result["tipo"] == "documento"
 
 
 @pytest.mark.unit
-def test_color_beats_sharp_gray():
-    """Foto en color, aunque menos nítida, siempre gana sobre grises."""
+def test_color_beats_gray_entre_dnis_sin_carnet():
+    """Sin carnet disponible, entre DNIs color gana sobre gris."""
     fotos = [
-        _photo(make_sharp_image(), tipo="carnet"),     # alta nitidez, gris
-        _photo(make_blurry_image(make_color_image()), tipo="documento"),  # borrosa, color
+        _photo(make_gray_image(),  tipo="dni"),
+        _photo(make_color_image(), tipo="dni"),
+    ]
+    result = select_best_photo(fotos)
+    assert result["es_color"] is True
+
+
+@pytest.mark.unit
+def test_color_beats_sharp_gray_entre_carnets():
+    """Entre carnets: color borrosa gana sobre gris nítida."""
+    fotos = [
+        _photo(make_sharp_image(),                    tipo="carnet"),
+        _photo(make_blurry_image(make_color_image()), tipo="carnet"),
     ]
     result = select_best_photo(fotos)
     assert result["es_color"] is True
@@ -70,34 +119,32 @@ def test_color_beats_sharp_gray():
 
 @pytest.mark.unit
 def test_sharp_beats_blurry_entre_colores():
-    """make_sharp_image coloreada (alternating rows) tiene más nitidez que blurry."""
-    from tests.fixtures.sample_images import make_sharp_image
+    """Dentro del mismo tipo y color, la más nítida gana."""
     import numpy as np
     from PIL import Image as PilImage
 
-    # Crear imagen de color con textura (alta varianza → alta nitidez)
     arr = np.zeros((100, 100, 3), dtype=np.uint8)
-    arr[::2, :] = [200, 100, 50]   # filas pares: color vivo
-    # filas impares: negro
+    arr[::2, :] = [200, 100, 50]
     sharp_color = PilImage.fromarray(arr, "RGB")
 
     blurry_color = make_blurry_image(sharp_color)
     fotos = [
         _photo(blurry_color, tipo="carnet"),
-        _photo(sharp_color,  tipo="documento"),
+        _photo(sharp_color,  tipo="carnet"),
     ]
     result = select_best_photo(fotos)
-    assert result["tipo"] == "documento"  # la nítida gana
+    assert result["es_color"] is True
+    assert result["nitidez"] > 100  # la nítida ganó (alta varianza Laplaciana)
 
 
 @pytest.mark.unit
 def test_sharp_beats_blurry_entre_grises():
+    """Dentro del mismo tipo, la más nítida gana."""
     fotos = [
         _photo(make_blurry_image(make_gray_image()), tipo="carnet"),
-        _photo(make_sharp_image(),                   tipo="documento"),
+        _photo(make_sharp_image(),                   tipo="carnet"),
     ]
     result = select_best_photo(fotos)
-    assert result["tipo"] == "documento"
     assert result["nitidez"] > 100  # sharp_image tiene varianza alta
 
 

@@ -148,6 +148,14 @@ def process_single_pdf(pdf_path: Path) -> str:
     best_photo = select_best_photo(photos)
     needs_review_foto = best_photo is None
 
+    if best_photo is not None and best_photo.get("tipo") == "dni":
+        has_carnet = any(p.get("tipo") == "carnet" for p in photos)
+        if not has_carnet:
+            logging.warning(
+                "Foto seleccionada es de DNI (sin foto de carnet disponible). "
+                "Verificar si YOLO/Haar generó un falso positivo en la página del documento."
+            )
+
     if needs_review_foto:
         logging.warning("No se encontró ninguna foto en el documento")
         errores.append("No se detectó ninguna foto de carnet ni de documento de identidad")
