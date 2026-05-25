@@ -15,3 +15,4 @@ pdf/
 /config.json
 /.claude/
 /build/_pyinstaller/
+/dist/ExpedienteExtractor/_internal/

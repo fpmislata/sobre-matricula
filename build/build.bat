@@ -103,6 +103,13 @@ if exist "%ICON%" copy /y "%ICON%" "%DIST_DIR%\%APP_NAME%\" >nul
 
 echo [4/4] Generando instalador con Inno Setup...
 
+REM Leer version desde installer.iss para el nombre del output
+set "APP_VERSION="
+for /f "tokens=1,2,3" %%a in (build\installer.iss) do (
+    if "%%a"=="#define" if "%%b"=="AppVersion" set "APP_VERSION=%%~c"
+)
+set "SAFE_VERSION=%APP_VERSION:.=_%"
+
 REM Buscar iscc en ubicaciones habituales
 set ISCC=
 where iscc >nul 2>&1
@@ -125,7 +132,11 @@ if "%ISCC%"=="" (
 ) else (
     "%ISCC%" build\installer.iss
     if not errorlevel 1 (
-        echo Instalador generado en: %DIST_DIR%\
+        if exist "%DIST_DIR%\ExpedienteExtractorSetup.exe" (
+            if exist "%DIST_DIR%\ExpedienteExtractor_%SAFE_VERSION%.exe" del /f /q "%DIST_DIR%\ExpedienteExtractor_%SAFE_VERSION%.exe"
+            ren "%DIST_DIR%\ExpedienteExtractorSetup.exe" "ExpedienteExtractor_%SAFE_VERSION%.exe"
+        )
+        echo Instalador generado: %DIST_DIR%\ExpedienteExtractor_%SAFE_VERSION%.exe
     ) else (
         echo [ERROR] Inno Setup fallo. Revisa los mensajes anteriores.
     )
