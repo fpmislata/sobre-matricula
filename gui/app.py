@@ -188,7 +188,11 @@ class DNIApp:
 
         self.page.update()
         if nav_id == "inicio_simple" and first_time:
-            self._inicio_simple_view.check_folders_on_startup()
+            async def _deferred_startup():
+                import asyncio
+                await asyncio.sleep(0.3)
+                self._inicio_simple_view.check_folders_on_startup()
+            self.page.run_task(_deferred_startup)
 
     # ── Unsaved changes dialog ────────────────────────────────────
 

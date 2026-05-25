@@ -438,16 +438,21 @@ class InicioSimpleView:
     def check_folders_on_startup(self):
         input_dir = self.app.cfg.get("input_dir", "")
         input_ok  = bool(input_dir) and Path(input_dir).exists()
+
+        def _after_all():
+            cfg = self.app.cfg
+            if (cfg.get("pending_reorganization", False)
+                    and not cfg.get("skip_pending_reorganization", False)
+                    and cfg.get("output_dir")):
+                self._show_pending_reorg_snack()
+
+        def _check_output():
+            self._show_output_folder_dialog_mandatory(then=_after_all)
+
         if not input_ok:
-            self._show_input_folder_dialog(then=self._show_output_folder_dialog_if_needed)
+            self._show_input_folder_dialog_mandatory(then=_check_output)
         else:
-            self._show_output_folder_dialog_if_needed()
-        # Avisar de reorganización pendiente si procede
-        cfg = self.app.cfg
-        if (cfg.get("pending_reorganization", False)
-                and not cfg.get("skip_pending_reorganization", False)
-                and cfg.get("output_dir")):
-            self._show_pending_reorg_snack()
+            _check_output()
 
     def _show_pending_reorg_snack(self):
         from gui.flet_compat import snack_open
@@ -458,6 +463,113 @@ class InicioSimpleView:
             self.colors.get("warning", "#FFA500"),
             6000,
         )
+
+    def _show_input_folder_dialog_mandatory(self, then=None):
+        """Startup dialog for PDF folder — no cancel, repeats until a valid path is chosen."""
+        c = self.colors
+        input_dir = self.app.cfg.get("input_dir", "")
+        if input_dir:
+            msg = (f"La carpeta de PDFs configurada no existe:\n{input_dir}\n\n"
+                   "Selecciona una carpeta válida para continuar.")
+        else:
+            msg = "No hay ninguna carpeta de PDFs configurada.\nDebes seleccionarla para continuar."
+
+        async def _pick(e):
+            dlg_close(self.page, dlg)
+            path = await ft.FilePicker().get_directory_path(dialog_title="Seleccionar carpeta de PDFs")
+            if path and Path(path).exists():
+                self._input_field.value = path
+                self.app.cfg["input_dir"] = path
+                save_config(self.app.cfg)
+                self._scan_pdfs()
+                self._update_process_btn_state()
+                self.page.update()
+                if then:
+                    then()
+            else:
+                self._show_input_folder_dialog_mandatory(then=then)
+
+        dlg = ft.AlertDialog(
+            modal=True,
+            title=ft.Text("Carpeta de PDFs requerida", color=c["text"]),
+            content=ft.Text(msg, color=c["text_muted"], size=13),
+            bgcolor=c["surface"],
+            actions=[
+                accent_btn(
+                    "Seleccionar carpeta", icon=I.FOLDER_OPEN,
+                    on_click=lambda e: self.page.run_task(_pick, e), colors=c,
+                ),
+            ],
+            actions_alignment=ft.MainAxisAlignment.END,
+        )
+        dlg_open(self.page, dlg)
+
+    def _show_output_folder_dialog_mandatory(self, then=None):
+        """Startup dialog for output folder — no cancel, repeats until a valid path is chosen."""
+        output_dir = self.app.cfg.get("output_dir", "")
+        output_ok  = bool(output_dir) and Path(output_dir).exists()
+        if output_ok:
+            if then:
+                then()
+            return
+
+        c = self.colors
+        can_create = bool(output_dir)
+        if can_create:
+            msg = (f"La carpeta de salida configurada no existe:\n{output_dir}\n\n"
+                   "Créala o selecciona una diferente para continuar.")
+        else:
+            msg = "No hay ninguna carpeta de salida configurada.\nDebes seleccionarla para continuar."
+
+        def _create(e):
+            dlg_close(self.page, dlg)
+            try:
+                Path(output_dir).mkdir(parents=True, exist_ok=True)
+                self._output_field.value = output_dir
+                self._update_process_btn_state()
+                self.page.update()
+                self._show_snack(f"Carpeta creada: {output_dir}")
+                if then:
+                    then()
+            except Exception as ex:
+                self._show_snack(f"Error al crear la carpeta: {ex}", error=True)
+                self._show_output_folder_dialog_mandatory(then=then)
+
+        async def _pick(e):
+            dlg_close(self.page, dlg)
+            path = await ft.FilePicker().get_directory_path(dialog_title="Seleccionar carpeta de salida")
+            if path and Path(path).exists():
+                self._output_field.value = path
+                self.app.cfg["output_dir"] = path
+                save_config(self.app.cfg)
+                self._update_process_btn_state()
+                self.page.update()
+                if then:
+                    then()
+            else:
+                self._show_output_folder_dialog_mandatory(then=then)
+
+        actions = [
+            ft.TextButton(
+                "Seleccionar otra" if can_create else "Seleccionar carpeta",
+                on_click=lambda e: self.page.run_task(_pick, e),
+            ),
+        ]
+        if can_create:
+            actions.append(accent_btn(
+                "Crear carpeta", icon=I.CREATE_NEW_FOLDER,
+                on_click=_create, colors=c,
+            ))
+
+        dlg = ft.AlertDialog(
+            modal=True,
+            title=ft.Text("Carpeta de salida requerida", color=c["text"]),
+            content=ft.Text(msg, color=c["text_muted"], size=13),
+            bgcolor=c["surface"],
+            actions=actions,
+            actions_alignment=ft.MainAxisAlignment.END,
+        )
+        dlg_open(self.page, dlg)
 
     def _show_input_folder_dialog(self, then=None):
         c = self.colors
