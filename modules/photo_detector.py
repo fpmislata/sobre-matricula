@@ -1,4 +1,5 @@
 import logging
+import sys
 import numpy as np
 import cv2
 from PIL import Image
@@ -37,7 +38,16 @@ def _get_yolo():
 def _get_haar():
     global _HAAR
     if _HAAR is None:
-        _HAAR = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
+        if hasattr(sys, 'frozen'):
+            cascade_path = str(Path(sys._MEIPASS) / 'cv2' / 'data' / 'haarcascade_frontalface_default.xml')
+        else:
+            cascade_path = cv2.data.haarcascades + 'haarcascade_frontalface_default.xml'
+        clf = cv2.CascadeClassifier(cascade_path)
+        if clf.empty():
+            logging.warning(f"Haar cascade no cargado desde: {cascade_path}")
+            _HAAR = None
+        else:
+            _HAAR = clf
     return _HAAR
 
 
@@ -61,8 +71,10 @@ def _detect_faces_yolo(img_cv2: np.ndarray) -> list[tuple[int, int, int, int, fl
 
 
 def _detect_faces_haar(img_cv2: np.ndarray) -> list[tuple[int, int, int, int, float]]:
-    gray = cv2.cvtColor(img_cv2, cv2.COLOR_BGR2GRAY)
     cascade = _get_haar()
+    if cascade is None:
+        return []
+    gray = cv2.cvtColor(img_cv2, cv2.COLOR_BGR2GRAY)
     faces = cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
     result = []
     for (x, y, w, h) in faces:
