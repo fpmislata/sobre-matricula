@@ -333,7 +333,19 @@ class InicioSimpleView:
     def _refresh_stats(self):
         total     = len(self._all_pdfs)
         processed = sum(1 for p in self._all_pdfs if self._is_in_index(p))
-        revision  = sum(1 for v in self._output_index.values() if v is True)
+        # Deduplicate: _build_output_index adds a secondary stripped entry for _X_name.pdf
+        # keys, so we normalize all keys to their stripped form before counting.
+        revision_canonical: set[str] = set()
+        for key, in_rev in self._output_index.items():
+            if not in_rev:
+                continue
+            if key.startswith("_") and "_" in key[1:]:
+                second = key.index("_", 1)
+                canonical = key[second + 1:] or key
+            else:
+                canonical = key
+            revision_canonical.add(canonical)
+        revision = len(revision_canonical)
         self._stat_total.value     = str(total)
         self._stat_processed.value = str(processed)
         self._stat_pending.value   = str(total - processed)

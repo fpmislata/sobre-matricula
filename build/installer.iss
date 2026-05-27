@@ -5,7 +5,7 @@
 ; ============================================================
 
 #define AppName      "Expediente Extractor"
-#define AppVersion   "1.0.6"
+#define AppVersion   "1.0.9"
 #define AppPublisher "IABD - FP Mislata"
 #define AppURL       "https://iabd.cip.fpmislata.com"
 #define AppExeName   "ExpedienteExtractor.exe"
