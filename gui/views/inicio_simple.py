@@ -18,6 +18,7 @@ class InicioSimpleView:
         self._all_pdfs: list[Path] = []
         self._output_index: dict[str, bool] = {}
         self._scanning = False
+        self._rescan_pending = False
 
         # ── Folder fields ─────────────────────────────────────────
         self._input_field = ft.TextField(
@@ -231,6 +232,7 @@ class InicioSimpleView:
 
     def _scan_pdfs(self):
         if self._scanning:
+            self._rescan_pending = True
             return
         input_dir = self.app.cfg.get("input_dir", "")
         if not input_dir:
@@ -321,6 +323,12 @@ class InicioSimpleView:
         self._refresh_stats()
         self._update_process_btn_state()
         safe_update(self.page)
+
+        if self._rescan_pending:
+            self._rescan_pending = False
+            async def _do_rescan():
+                self._scan_pdfs()
+            self.page.run_task(_do_rescan)
 
     def _refresh_stats(self):
         total     = len(self._all_pdfs)
