@@ -1,7 +1,7 @@
 # -*- mode: python ; coding: utf-8 -*-
 from PyInstaller.utils.hooks import collect_all
 
-datas = [('models', 'models'), ('modules', 'modules'), ('utils', 'utils'), ('gui', 'gui')]
+datas = [('models', 'models'), ('modules', 'modules'), ('utils', 'utils'), ('gui', 'gui'), ('.venv/Lib/site-packages/cv2/data', 'cv2/data')]
 binaries = []
 hiddenimports = ['main', 'config', 'cv2', 'pymupdf', 'Levenshtein', 'requests', 'gui.app', 'gui.theme', 'gui.config_manager', 'gui.flet_compat', 'gui.processing_manager', 'gui.processing_worker', 'gui.review_manager', 'gui.system_utils', 'gui.views.inicio_simple', 'gui.views.inicio', 'gui.views.configuracion', 'gui.views.logs', 'gui.views.output', 'gui.views.review_dialog']
 tmp_ret = collect_all('flet')

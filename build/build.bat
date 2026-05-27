@@ -60,6 +60,7 @@ if exist "%ICON%" set ICON_FLAG=--icon "%ICON%"
     --add-data "modules;modules" ^
     --add-data "utils;utils" ^
     --add-data "gui;gui" ^
+    --add-data ".venv\Lib\site-packages\cv2\data;cv2/data" ^
     --collect-all flet ^
     --collect-all flet_desktop ^
     --collect-all ultralytics ^

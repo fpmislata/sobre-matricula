@@ -10,8 +10,8 @@ if _env_path.exists():
             _k, _v = _line.split("=", 1)
             os.environ.setdefault(_k.strip(), _v.strip())
 
-INPUT_DIR = Path("/home/jevallo/workspace/IABD/dni2/pdf")
-OUTPUT_DIR = Path("/home/jevallo/workspace/IABD/dni2/output")
+INPUT_DIR = Path(__file__).parent / "pdf"
+OUTPUT_DIR = Path(__file__).parent / "output"
 REVIEW_DIR = OUTPUT_DIR / "revision"
 
 # ── Modo de ejecución ──────────────────────────────────────────────────────────
@@ -43,7 +43,7 @@ OPENROUTER_MODEL = "qwen/qwen3-vl-8b-instruct"
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
 
 PDF_DPI = 200
-YOLO_MODEL_PATH = Path("/home/jevallo/workspace/IABD/dni2/models/yolov8-face.pt")
+YOLO_MODEL_PATH = Path(__file__).parent / "models" / "yolov8-face.pt"
 YOLO_CONFIDENCE = 0.35
 FACE_PADDING_RATIO = 0.35
 
