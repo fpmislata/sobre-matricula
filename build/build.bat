@@ -17,7 +17,7 @@ set PIP=.venv\Scripts\pip.exe
 set PYINSTALLER=.venv\Scripts\pyinstaller.exe
 
 echo.
-echo [0/4] Verificando entorno...
+echo [0/5] Verificando entorno...
 if not exist "%PYTHON%" (
     echo [ERROR] No se encontro el entorno virtual en .venv\
     echo         Crea el entorno con: python -m venv .venv
@@ -38,12 +38,30 @@ if errorlevel 1 (
 )
 
 echo.
-echo [1/4] Limpiando compilaciones anteriores...
+echo [1/5] Ejecutando tests...
+%PYTHON% -m pytest tests\ -m "not slow" -q --tb=short
+if errorlevel 1 (
+    echo.
+    echo [AVISO] Algunos tests han fallado.
+    if defined NOPAUSE (
+        echo         Build automatico: abortando.
+        exit /b 1
+    )
+    set /p CONTINUAR="         Continuar con la compilacion de todas formas? (s/N): "
+    if /i not "%CONTINUAR%"=="s" (
+        echo Compilacion cancelada.
+        pause
+        exit /b 1
+    )
+)
+
+echo.
+echo [2/5] Limpiando compilaciones anteriores...
 if exist "%DIST_DIR%\%APP_NAME%" rmdir /s /q "%DIST_DIR%\%APP_NAME%"
 if exist "%BUILD_DIR%"           rmdir /s /q "%BUILD_DIR%"
 
 echo.
-echo [2/4] Compilando con PyInstaller...
+echo [3/5] Compilando con PyInstaller...
 
 REM Construir flag --icon de forma condicional
 set ICON_FLAG=
@@ -95,14 +113,14 @@ if errorlevel 1 (
 )
 
 echo.
-echo [3/4] Compilacion completada:
+echo [4/5] Compilacion completada:
 echo   %DIST_DIR%\%APP_NAME%\%APP_NAME%.exe
 echo.
 
 REM Copiar el icono si existe (para Inno Setup)
 if exist "%ICON%" copy /y "%ICON%" "%DIST_DIR%\%APP_NAME%\" >nul
 
-echo [4/4] Generando instalador con Inno Setup...
+echo [5/5] Generando instalador con Inno Setup...
 
 REM Leer version desde installer.iss para el nombre del output
 set "APP_VERSION="
