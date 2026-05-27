@@ -77,6 +77,7 @@ class InicioView:
         self._filter = "all"
         self._output_index: dict[str, bool] = {}   # pdf_original → en_revision
         self._scanning = False                      # guard against concurrent scans
+        self._rescan_pending = False                # rescan requested while scan was running
 
         # Per-PDF status for the list display (managed locally in Avanzada)
         self._pdf_status: dict[Path, str] = {}
@@ -392,6 +393,7 @@ class InicioView:
 
     def _scan_pdfs(self):
         if self._scanning:
+            self._rescan_pending = True
             return
         input_dir = self.app.cfg.get("input_dir", "")
         if not input_dir:
@@ -492,6 +494,12 @@ class InicioView:
         self._refresh_stats()
         self._apply_filter()
         safe_update(self.page)
+
+        if self._rescan_pending:
+            self._rescan_pending = False
+            async def _do_rescan():
+                self._scan_pdfs()
+            self.page.run_task(_do_rescan)
 
     def _refresh_stats(self):
         total = len(self._all_pdfs)
